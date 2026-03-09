@@ -1,0 +1,6 @@
+name = "kachi-banner-pro-api"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+# シークレットは wrangler secret put OPENAI_API_KEY で設定
+# ローカル開発時は api/.dev.vars に OPENAI_API_KEY=sk-... を記載

@@ -1,6 +1,6 @@
 import { useAtom, useSetAtom } from "jotai";
-import { Globe, Brain, CheckCircle2, Loader2, ChevronRight } from "lucide-react";
-import { lpUrlAtom, analysisCompleteAtom, currentStepAtom } from "../stores";
+import { Globe, Brain, CheckCircle2, Loader2, ChevronRight, AlertCircle } from "lucide-react";
+import { lpUrlAtom, analysisCompleteAtom, currentStepAtom, lpAnalysisMarkdownAtom } from "../stores";
 import { useAnalyzeLp } from "../api";
 import { DEMO_LP_URLS } from "../utils/constants";
 
@@ -26,11 +26,17 @@ export const Step1LpAnalysis = () => {
   const [lpUrl, setLpUrl] = useAtom(lpUrlAtom);
   const [analysisComplete, setAnalysisComplete] = useAtom(analysisCompleteAtom);
   const setCurrentStep = useSetAtom(currentStepAtom);
-  const { mutate: analyzeLp, isPending } = useAnalyzeLp();
+  const setLpAnalysisMarkdown = useSetAtom(lpAnalysisMarkdownAtom);
+  const { mutate: analyzeLp, isPending, isError, error } = useAnalyzeLp();
 
   const handleAnalyze = () => {
     if (!lpUrl.trim()) return;
-    analyzeLp(lpUrl, { onSuccess: () => setAnalysisComplete(true) });
+    analyzeLp(lpUrl, {
+      onSuccess: (data) => {
+        setLpAnalysisMarkdown(data.markdown);
+        setAnalysisComplete(true);
+      },
+    });
   };
 
   return (
@@ -84,6 +90,13 @@ export const Step1LpAnalysis = () => {
       </div>
 
       {isPending && <AnalyzingState />}
+
+      {isError && !isPending && (
+        <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-start gap-2">
+          <AlertCircle size={18} className="text-red-500 shrink-0 mt-0.5" />
+          <p className="text-red-800 text-sm">{error?.message ?? "分析に失敗しました"}</p>
+        </div>
+      )}
 
       {analysisComplete && !isPending && (
         <div className="bg-white rounded-2xl border border-emerald-100 shadow-sm p-6">

@@ -1,11 +1,12 @@
 import { useAtom, useSetAtom } from "jotai";
-import { Target, AlertCircle, Edit3, ArrowLeft, ChevronRight, Lightbulb } from "lucide-react";
-import { currentStepAtom, lpAnalysisAtom } from "../stores";
+import { Target, AlertCircle, Edit3, ArrowLeft, ChevronRight, Lightbulb, FileText } from "lucide-react";
+import { currentStepAtom, lpAnalysisAtom, lpAnalysisMarkdownAtom } from "../stores";
 import { Step2BasicInfoForm } from "./Step2BasicInfoForm";
 import { Step2PainDesirePanel } from "./Step2PainDesirePanel";
 
 export const Step2TargetEdit = () => {
   const [analysis, setAnalysis] = useAtom(lpAnalysisAtom);
+  const [analysisMarkdown, setAnalysisMarkdown] = useAtom(lpAnalysisMarkdownAtom);
   const setCurrentStep = useSetAtom(currentStepAtom);
 
   const updatePains = (pains: string[]) => setAnalysis((prev) => ({ ...prev, pains }));
@@ -22,6 +23,23 @@ export const Step2TargetEdit = () => {
           <Edit3 size={13} />
           <span style={{ fontSize: "12px" }}>編集可能</span>
         </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <h3 className="text-slate-800 mb-3 flex items-center gap-2" style={{ fontSize: "15px", fontWeight: 600 }}>
+          <FileText size={16} className="text-violet-500" />
+          分析結果（Markdown）
+        </h3>
+        <p className="text-slate-500 mb-3" style={{ fontSize: "12px" }}>
+          商材の深層解剖結果です。必要に応じて加筆・修正してから次のステップへ進んでください。
+        </p>
+        <textarea
+          value={analysisMarkdown}
+          onChange={(e) => setAnalysisMarkdown(e.target.value)}
+          placeholder="Step1でLP分析が完了するとここに結果が表示されます"
+          className="w-full min-h-[200px] border border-gray-200 rounded-xl px-4 py-3 text-slate-700 bg-gray-50 focus:bg-white focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100 font-mono text-sm resize-y"
+          style={{ fontSize: "13px" }}
+        />
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
