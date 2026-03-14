@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Edit3, Save, Loader2, AlertCircle } from "lucide-react";
+import { useAtom } from "jotai";
+import { Edit3, Save, Loader2, AlertCircle, ChevronDown, ChevronRight } from "lucide-react";
 import { type LpStructuredContext, useProject, useUpdateLpContext } from "../api";
 import { useParams } from "react-router";
+import { lpContextOpenAtom } from "../stores";
 
 type SimpleSectionKey = keyof Pick<
   LpStructuredContext,
@@ -206,54 +208,70 @@ export const LpContextPanel = () => {
   }
 
   const ctx = project.lpStructuredContext;
+  const [open, setOpen] = useAtom(lpContextOpenAtom);
 
   return (
-    <div className="mb-6 space-y-3">
-      <h2 className="text-slate-900 mb-1" style={{ fontSize: "15px", fontWeight: 700 }}>
-        LP分析コンテキスト
-      </h2>
-      <p className="text-slate-500 text-xs mb-2">
-        LPから抽出した分析内容です。バナー生成時のコンテキストとして利用されます。気になる箇所があれば編集して保存してください。
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <EditableSection
-          label="コアバリュー"
-          field="coreValue"
-          value={ctx.coreValue}
-          placeholder="例: コアバリュー（一言で言うと何を変える商品か）"
-          onSave={handleSaveField}
-        />
-        <EditableSection
-          label="メインターゲット"
-          field="mainTarget"
-          value={ctx.mainTarget}
-          placeholder="例: ターゲット層（誰がメインの顧客になり得るか）"
-          onSave={handleSaveField}
-        />
-        <EditableSection
-          label="競合優位性"
-          field="competitiveAdvantage"
-          value={ctx.competitiveAdvantage}
-          placeholder="例: 差別化ポイント（なぜ他ではなくこれを選ぶべきか）"
-          onSave={handleSaveField}
-        />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <EditableListSection
-          label="機能的ベネフィット（スペック・事実）"
-          field="functionalBenefits"
-          values={ctx.functionalBenefits}
-          placeholder="例: 1行1項目でスペック・事実を入力"
-          onSave={handleSaveList}
-        />
-        <EditableListSection
-          label="情緒的ベネフィット（得られる安心感や優越感）"
-          field="emotionalBenefits"
-          values={ctx.emotionalBenefits}
-          placeholder="例: 1行1項目で得られる安心感・優越感を入力"
-          onSave={handleSaveList}
-        />
-      </div>
+    <div className="mb-6 rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50/80 transition-colors"
+      >
+        <h2 className="text-slate-900" style={{ fontSize: "15px", fontWeight: 700 }}>
+          LP分析コンテキスト
+        </h2>
+        {open ? (
+          <ChevronDown size={20} className="text-slate-400 shrink-0" aria-hidden />
+        ) : (
+          <ChevronRight size={20} className="text-slate-400 shrink-0" aria-hidden />
+        )}
+      </button>
+      {open && (
+        <div className="px-4 pb-4 pt-0 space-y-3 border-t border-gray-100">
+          <p className="text-slate-500 text-xs pt-3">
+            LPから抽出した分析内容です。バナー生成時のコンテキストとして利用されます。気になる箇所があれば編集して保存してください。
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <EditableSection
+              label="コアバリュー"
+              field="coreValue"
+              value={ctx.coreValue}
+              placeholder="例: コアバリュー（一言で言うと何を変える商品か）"
+              onSave={handleSaveField}
+            />
+            <EditableSection
+              label="メインターゲット"
+              field="mainTarget"
+              value={ctx.mainTarget}
+              placeholder="例: ターゲット層（誰がメインの顧客になり得るか）"
+              onSave={handleSaveField}
+            />
+            <EditableSection
+              label="競合優位性"
+              field="competitiveAdvantage"
+              value={ctx.competitiveAdvantage}
+              placeholder="例: 差別化ポイント（なぜ他ではなくこれを選ぶべきか）"
+              onSave={handleSaveField}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <EditableListSection
+              label="機能的ベネフィット（スペック・事実）"
+              field="functionalBenefits"
+              values={ctx.functionalBenefits}
+              placeholder="例: 1行1項目でスペック・事実を入力"
+              onSave={handleSaveList}
+            />
+            <EditableListSection
+              label="情緒的ベネフィット（得られる安心感や優越感）"
+              field="emotionalBenefits"
+              values={ctx.emotionalBenefits}
+              placeholder="例: 1行1項目で得られる安心感・優越感を入力"
+              onSave={handleSaveList}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
