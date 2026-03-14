@@ -1,4 +1,5 @@
 import { Outlet, NavLink, useNavigate } from "react-router";
+import { useState } from "react";
 import {
   LayoutDashboard,
   Sparkles,
@@ -7,13 +8,15 @@ import {
   Settings,
   CreditCard,
   ChevronRight,
+  ChevronDown,
   Zap,
   Bell,
   User,
+  FolderOpen,
 } from "lucide-react";
+import { useProjectList } from "../features/project-detail/api";
 
 const NAV_ITEMS = [
-  { icon: LayoutDashboard, label: "ダッシュボード", to: "/" },
   { icon: ImagePlus, label: "新規バナー生成", to: "/new" },
   { icon: History, label: "生成履歴", to: "/#history" },
   { icon: CreditCard, label: "購入・課金", to: "/#billing" },
@@ -48,8 +51,29 @@ const UserFooter = () => (
   </div>
 );
 
+const PROJECTS_SECTION_OPEN_KEY = "sidebar-projects-open";
+
 export const Layout = () => {
   const navigate = useNavigate();
+  const [projectsOpen, setProjectsOpen] = useState(() => {
+    try {
+      const v = localStorage.getItem(PROJECTS_SECTION_OPEN_KEY);
+      return v !== "false";
+    } catch {
+      return true;
+    }
+  });
+  const { data: projects = [] } = useProjectList();
+
+  const toggleProjects = () => {
+    setProjectsOpen((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(PROJECTS_SECTION_OPEN_KEY, String(next));
+      } catch {}
+      return next;
+    });
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -77,7 +101,60 @@ export const Layout = () => {
           </button>
         </div>
 
-        <nav className="flex-1 px-3 py-2 space-y-0.5">
+        <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-auto min-h-0">
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 group ${
+                isActive ? "bg-violet-600/20 text-violet-300" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <LayoutDashboard size={16} className={isActive ? "text-violet-400" : "text-slate-500 group-hover:text-slate-300"} />
+                <span style={{ fontSize: "13px" }}>ダッシュボード</span>
+                {isActive && <ChevronRight size={12} className="ml-auto text-violet-400" />}
+              </>
+            )}
+          </NavLink>
+          <div className="pt-2 pb-1">
+            <button
+              type="button"
+              onClick={toggleProjects}
+              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+              style={{ fontSize: "11px", fontWeight: 600 }}
+            >
+              {projectsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              プロジェクト
+            </button>
+            {projectsOpen && (
+              projects.length === 0 ? (
+                <div className="px-3 py-2 pl-6 text-slate-500" style={{ fontSize: "12px" }}>プロジェクトはまだありません</div>
+              ) : (
+                projects.map((p) => (
+                  <NavLink
+                    key={p.id}
+                    to={`/project/${p.id}`}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 group pl-6 ${
+                        isActive ? "bg-violet-600/20 text-violet-300" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <FolderOpen size={14} className={isActive ? "text-violet-400" : "text-slate-500 group-hover:text-slate-300 shrink-0"} />
+                        <span className="truncate" style={{ fontSize: "13px" }}>{p.name}</span>
+                        {isActive && <ChevronRight size={12} className="ml-auto text-violet-400 shrink-0" />}
+                      </>
+                    )}
+                  </NavLink>
+                ))
+              )
+            )}
+          </div>
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.label}

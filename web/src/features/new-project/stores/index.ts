@@ -4,6 +4,7 @@ import { DEFAULT_ANALYSIS } from "../utils/constants";
 import { EMPTY_STRUCTURED_CONTEXT } from "@shared";
 
 export const currentStepAtom = atom<Step>(1);
+export const projectNameAtom = atom("");
 export const lpUrlAtom = atom("");
 export const analysisCompleteAtom = atom(false);
 /** API が返した LP 分析結果（Markdown）。Step2 で表示・編集する元データ */

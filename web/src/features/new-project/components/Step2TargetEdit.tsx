@@ -178,21 +178,21 @@ export const Step2TargetEdit = () => {
             label="コアバリュー"
             field="coreValue"
             value={structured.coreValue}
-            placeholder="例: 「忙しくても続けられる、ストレスフリーなダイエット習慣」など"
+            placeholder="例: コアバリュー（一言で言うと何を変える商品か）"
             onSave={handleSaveSimple}
           />
           <SimpleEditableSection
             label="メインターゲット"
             field="mainTarget"
             value={structured.mainTarget}
-            placeholder="例: 30〜40代の仕事と家事で忙しい女性 など"
+            placeholder="例: ターゲット層（誰がメインの顧客になり得るか）"
             onSave={handleSaveSimple}
           />
           <SimpleEditableSection
             label="競合優位性"
             field="competitiveAdvantage"
             value={structured.competitiveAdvantage}
-            placeholder="例: 臨床試験データ / 定期縛りなし など"
+            placeholder="例: 差別化ポイント（なぜ他ではなくこれを選ぶべきか）"
             onSave={handleSaveSimple}
           />
         </div>
@@ -201,14 +201,14 @@ export const Step2TargetEdit = () => {
             label="機能的ベネフィット（スペック・事実）"
             field="functionalBenefits"
             values={structured.functionalBenefits}
-            placeholder="例:\n・〇〇成分を高配合\n・1日1粒でOK\n・定期縛りなし など"
+            placeholder="例: 1行1項目でスペック・事実を入力"
             onSave={handleSaveList}
           />
           <ListEditableSection
             label="情緒的ベネフィット（得られる安心感や優越感）"
             field="emotionalBenefits"
             values={structured.emotionalBenefits}
-            placeholder="例:\n・着たい服が着られる\n・体型の悩みから解放される など"
+            placeholder="例: 1行1項目で得られる安心感・優越感を入力"
             onSave={handleSaveList}
           />
         </div>

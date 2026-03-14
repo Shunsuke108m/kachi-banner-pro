@@ -2322,18 +2322,75 @@ var EMPTY_STRUCTURED_CONTEXT = {
 
 // src/routes/projects.ts
 var DEMO_USER_ID = "demo-user";
-var DEMO_PROJECT_ID = "demo-project";
-var demoProject = {
-  id: DEMO_PROJECT_ID,
-  userId: DEMO_USER_ID,
-  name: "\u30C7\u30E2\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8",
-  lpUrl: "",
-  lpRawAnalysisMarkdown: "",
-  lpStructuredContext: { ...EMPTY_STRUCTURED_CONTEXT }
-};
-var projectRoutes = new Hono2().get("/projects/:projectId", (c) => {
-  return c.json({ ok: true, project: demoProject });
-}).put("/projects/:projectId/lp-context", async (c) => {
+var store = /* @__PURE__ */ new Map();
+function nextId() {
+  return `p-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+__name(nextId, "nextId");
+var projectRoutes = new Hono2().get("/projects", (c) => {
+  const items = [];
+  for (const p of store.values()) {
+    if (p.userId === DEMO_USER_ID)
+      items.push({ id: p.id, name: p.name });
+  }
+  items.sort((a, b) => b.id.localeCompare(a.id));
+  return c.json({ ok: true, projects: items });
+}).get("/project/:projectId", (c) => {
+  const projectId = c.req.param("projectId");
+  const project = store.get(projectId);
+  if (!project) {
+    return c.json({ ok: false, error: "Project not found" }, 404);
+  }
+  return c.json({ ok: true, project });
+}).post("/project", async (c) => {
+  let body;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ ok: false, error: "Invalid JSON body" }, 400);
+  }
+  const { name, lpUrl, lpStructuredContext, lpRawAnalysisMarkdown } = body;
+  if (typeof name !== "string" || typeof lpUrl !== "string" || !lpStructuredContext) {
+    return c.json(
+      { ok: false, error: "name, lpUrl, lpStructuredContext are required" },
+      400
+    );
+  }
+  const id = nextId();
+  const project = {
+    id,
+    userId: DEMO_USER_ID,
+    name: name.trim() || "\u7121\u984C\u306E\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8",
+    lpUrl: lpUrl.trim(),
+    lpRawAnalysisMarkdown: lpRawAnalysisMarkdown ?? "",
+    lpStructuredContext: lpStructuredContext ?? { ...EMPTY_STRUCTURED_CONTEXT }
+  };
+  store.set(id, project);
+  return c.json({ ok: true, project }, 201);
+}).patch("/project/:projectId", async (c) => {
+  const projectId = c.req.param("projectId");
+  const project = store.get(projectId);
+  if (!project) {
+    return c.json({ ok: false, error: "Project not found" }, 404);
+  }
+  let body;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ ok: false, error: "Invalid JSON body" }, 400);
+  }
+  const { name } = body;
+  if (typeof name === "string") {
+    project.name = name.trim() || project.name;
+    store.set(projectId, project);
+  }
+  return c.json({ ok: true, project });
+}).put("/project/:projectId/lp-context", async (c) => {
+  const projectId = c.req.param("projectId");
+  const project = store.get(projectId);
+  if (!project) {
+    return c.json({ ok: false, error: "Project not found" }, 404);
+  }
   let body;
   try {
     body = await c.req.json();
@@ -2344,15 +2401,14 @@ var projectRoutes = new Hono2().get("/projects/:projectId", (c) => {
   if (!structured) {
     return c.json({ ok: false, error: "structured context is required" }, 400);
   }
-  demoProject = {
-    ...demoProject,
-    lpStructuredContext: structured,
-    lpRawAnalysisMarkdown: markdown ?? demoProject.lpRawAnalysisMarkdown
-  };
+  project.lpStructuredContext = structured;
+  if (markdown !== void 0)
+    project.lpRawAnalysisMarkdown = markdown;
+  store.set(projectId, project);
   const res = {
     ok: true,
-    lpStructuredContext: demoProject.lpStructuredContext,
-    lpRawAnalysisMarkdown: markdown
+    lpStructuredContext: project.lpStructuredContext,
+    lpRawAnalysisMarkdown: project.lpRawAnalysisMarkdown
   };
   return c.json(res);
 });
@@ -2363,7 +2419,7 @@ app.use(
   "/*",
   cors({
     origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
-    allowMethods: ["GET", "POST", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "OPTIONS"],
     allowHeaders: ["Content-Type"]
   })
 );

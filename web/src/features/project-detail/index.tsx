@@ -1,21 +1,66 @@
+import { useState } from "react";
 import { useAtomValue } from "jotai";
 import { useNavigate, useParams } from "react-router";
-import { ArrowLeft, CheckCircle2, RefreshCw, ShieldCheck } from "lucide-react";
+import { ArrowLeft, CheckCircle2, RefreshCw, ShieldCheck, Edit3, Check } from "lucide-react";
 import { bannersAtom } from "./stores";
 import { AnalysisSummary } from "./components/AnalysisSummary";
 import { BannerCard } from "./components/BannerCard";
 import { PurchaseModal } from "./components/PurchaseModal";
 import { PreviewModal } from "./components/PreviewModal";
 import { LpContextPanel } from "./components/LpContextPanel";
-import { useProject } from "./api";
+import { useProject, useUpdateProjectName } from "./api";
 
 export const ProjectDetail = () => {
   const navigate = useNavigate();
   const params = useParams();
   const projectId = params.id ?? "demo-project";
-  const { data: project } = useProject(projectId);
+  const { data: project, isLoading, isError } = useProject(projectId);
+  const updateName = useUpdateProjectName(projectId);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
   const banners = useAtomValue(bannersAtom);
   const purchasedCount = banners.filter((b) => b.isPurchased).length;
+
+  const startEditName = () => {
+    setNameDraft(project?.name ?? "");
+    setIsEditingName(true);
+  };
+  const saveName = () => {
+    if (nameDraft.trim()) {
+      updateName.mutate(nameDraft, { onSettled: () => setIsEditingName(false) });
+    } else {
+      setIsEditingName(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-full bg-gray-50 flex items-center justify-center">
+        <p className="text-slate-500">読み込み中…</p>
+      </div>
+    );
+  }
+  if (isError || !project) {
+    return (
+      <div className="min-h-full bg-gray-50 flex flex-col items-center justify-center gap-4 p-6">
+        <p className="text-slate-600">プロジェクトが見つかりません</p>
+        <div className="flex gap-3">
+          <button
+            onClick={() => navigate("/")}
+            className="text-violet-600 hover:text-violet-700 font-medium"
+          >
+            ダッシュボードへ
+          </button>
+          <button
+            onClick={() => navigate("/new")}
+            className="text-violet-600 hover:text-violet-700 font-medium"
+          >
+            新規プロジェクトを作成
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full bg-gray-50">
@@ -30,12 +75,47 @@ export const ProjectDetail = () => {
               <ArrowLeft size={15} />ダッシュボード
             </button>
             <div className="h-4 w-px bg-gray-200" />
-            <div>
-              <h1 className="text-slate-800" style={{ fontSize: "15px", fontWeight: 600 }}>
-                {project?.name ?? "プロジェクト"}
-              </h1>
-              {project?.lpUrl && (
-                <p className="text-slate-400" style={{ fontSize: "11px" }}>
+            <div className="min-w-0">
+              {isEditingName ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={nameDraft}
+                    onChange={(e) => setNameDraft(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && saveName()}
+                    className="border border-gray-200 rounded-lg px-2 py-1 text-slate-800"
+                    style={{ fontSize: "15px", fontWeight: 600 }}
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={saveName}
+                    disabled={updateName.isPending}
+                    className="flex items-center gap-1 text-emerald-600 hover:text-emerald-700 text-sm"
+                  >
+                    <Check size={14} />保存
+                  </button>
+                  <button type="button" onClick={() => setIsEditingName(false)} className="text-slate-400 hover:text-slate-600 text-sm">
+                    キャンセル
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <h1 className="text-slate-800 truncate" style={{ fontSize: "15px", fontWeight: 600 }}>
+                    {project?.name ?? "プロジェクト"}
+                  </h1>
+                  <button
+                    type="button"
+                    onClick={startEditName}
+                    className="text-slate-400 hover:text-violet-600 p-0.5"
+                    aria-label="プロジェクト名を編集"
+                  >
+                    <Edit3 size={14} />
+                  </button>
+                </div>
+              )}
+              {project?.lpUrl && !isEditingName && (
+                <p className="text-slate-400 truncate" style={{ fontSize: "11px" }}>
                   LP: {project.lpUrl}
                 </p>
               )}

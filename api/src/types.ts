@@ -31,9 +31,36 @@ export interface Project {
   lpStructuredContext: LpStructuredContext;
 }
 
+/** 一覧用。サイドバー表示を軽くするため id と name のみ */
+export interface ProjectListItem {
+  id: string;
+  name: string;
+}
+
 export interface GetProjectResponse {
   ok: true;
   project: Project;
+}
+
+export interface ListProjectsResponse {
+  ok: true;
+  projects: ProjectListItem[];
+}
+
+export interface CreateProjectRequest {
+  name: string;
+  lpUrl: string;
+  lpStructuredContext: LpStructuredContext;
+  lpRawAnalysisMarkdown?: string;
+}
+
+export interface CreateProjectResponse {
+  ok: true;
+  project: Project;
+}
+
+export interface UpdateProjectRequest {
+  name: string;
 }
 
 export interface UpdateLpContextRequest {

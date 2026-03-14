@@ -1,6 +1,28 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getApiBaseUrl } from "../../new-project/api/config";
 
+// ------- プロジェクト一覧（サイドバー用。id と name のみ） -------
+
+export interface ProjectListItem {
+  id: string;
+  name: string;
+}
+
+async function fetchProjectList(): Promise<ProjectListItem[]> {
+  const res = await fetch(`${getApiBaseUrl()}/projects`);
+  const data = (await res.json()) as { ok: boolean; projects?: ProjectListItem[]; error?: string };
+  if (!data.ok || !data.projects) {
+    return [];
+  }
+  return data.projects;
+}
+
+export const useProjectList = () =>
+  useQuery({
+    queryKey: ["projectList"],
+    queryFn: fetchProjectList,
+  });
+
 // ------- バナー購入（既存のモック） -------
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -39,7 +61,7 @@ interface UpdateLpContextResponse {
 const DEMO_PROJECT_ID = "demo-project";
 
 async function fetchProject(projectId: string): Promise<Project> {
-  const res = await fetch(`${getApiBaseUrl()}/projects/${projectId}`);
+  const res = await fetch(`${getApiBaseUrl()}/project/${projectId}`);
   const data = (await res.json()) as GetProjectResponse;
   if (!data.ok || !data.project) {
     throw new Error(data.error ?? "プロジェクトの取得に失敗しました");
@@ -55,6 +77,30 @@ export const useProject = (projectId?: string) => {
   });
 };
 
+async function updateProjectName(projectId: string, name: string): Promise<Project> {
+  const res = await fetch(`${getApiBaseUrl()}/projects/${projectId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: name.trim() || "無題のプロジェクト" }),
+  });
+  const data = (await res.json()) as GetProjectResponse & { error?: string };
+  if (!data.ok || !data.project) {
+    throw new Error(data.error ?? "プロジェクト名の更新に失敗しました");
+  }
+  return data.project;
+}
+
+export const useUpdateProjectName = (projectId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => updateProjectName(projectId, name),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(["project", projectId], updated);
+      queryClient.invalidateQueries({ queryKey: ["projectList"] });
+    },
+  });
+};
+
 interface UpdateLpContextArgs {
   projectId?: string;
   structured: LpStructuredContext;
@@ -63,7 +109,7 @@ interface UpdateLpContextArgs {
 
 async function updateLpContext(args: UpdateLpContextArgs): Promise<LpStructuredContext> {
   const projectId = args.projectId ?? DEMO_PROJECT_ID;
-  const res = await fetch(`${getApiBaseUrl()}/projects/${projectId}/lp-context`, {
+  const res = await fetch(`${getApiBaseUrl()}/project/${projectId}/lp-context`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ structured: args.structured, markdown: args.markdown }),
