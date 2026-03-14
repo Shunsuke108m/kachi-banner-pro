@@ -2208,7 +2208,11 @@ __name(getLpContent, "getLpContent");
 // src/prompts/lp-analysis.ts
 var LP_ANALYSIS_SYSTEM_PROMPT = `\u25A0 \u3010Phase 1: \u5546\u6750\u306E\u6DF1\u5C64\u89E3\u5256\u3068\u30ED\u30B4\u89E3\u6790\u3011
 \u30C8\u30EA\u30AC\u30FC: \u30E6\u30FC\u30B6\u30FC\u304CLP\u306EURL\u3092\u5165\u529B\u3057\u305F\u6642
-\u30BF\u30B9\u30AF: \u8D85\u512A\u79C0\u306A\u30DE\u30FC\u30B1\u30C6\u30A3\u30F3\u30B0\u6226\u7565\u5BB6\u3068\u3057\u3066\u3001LP\u306E\u30B9\u30DA\u30C3\u30AF\u3001\u30BF\u30FC\u30B2\u30C3\u30C8\u3001USP\u3001\u6A5F\u80FD\u7684/\u60C5\u7DD2\u7684\u4FA1\u5024\u3092\u8D85\u9AD8\u89E3\u50CF\u5EA6\u3067\u5206\u6790\u3057\u307E\u3059\u3002
+\u30BF\u30B9\u30AF: \u8D85\u512A\u79C0\u306A\u30DE\u30FC\u30B1\u30C6\u30A3\u30F3\u30B0\u6226\u7565\u5BB6\u3068\u3057\u3066\u3001LP\u306E\u30B9\u30DA\u30C3\u30AF\u3001\u30BF\u30FC\u30B2\u30C3\u30C8\u3001USP\u3001\u6A5F\u80FD\u7684/\u60C5\u7DD2\u7684\u4FA1\u5024\u3092\u8D85\u9AD8\u89E3\u50CF\u5EA6\u3067\u5206\u6790\u3057\u307E\u3059\u3002LP\u5168\u4F53\uFF08\u30D5\u30A1\u30FC\u30B9\u30C8\u30D3\u30E5\u30FC\u301CFAQ\u30FB\u30D5\u30C3\u30BF\u30FC\u307E\u3067\uFF09\u3092\u901A\u8AAD\u3057\u3001\u6B21\u306E\u60C5\u5831\u3092\u6F0F\u308C\u306A\u304F\u62FE\u3063\u3066\u304F\u3060\u3055\u3044:
+- \u6599\u91D1\u30FB\u4FA1\u683C\u30FB\u30D7\u30E9\u30F3\u30FB\u5272\u5F15\u30FB\u30AD\u30E3\u30F3\u30DA\u30FC\u30F3\u6761\u4EF6
+- \u304A\u7533\u3057\u8FBC\u307F\u6761\u4EF6\u30FB\u6700\u4F4E\u5229\u7528\u671F\u9593\u30FB\u89E3\u7D04\u6761\u4EF6\u30FB\u8FD4\u91D1/\u8FD4\u54C1\u30DD\u30EA\u30B7\u30FC\u30FB\u6CE8\u610F\u4E8B\u9805\u30FB\u514D\u8CAC
+- FAQ\u3084\u300C\u3088\u304F\u3042\u308B\u8CEA\u554F\u300D\u3001\u6CE8\u91C8\u30FB\u4F46\u3057\u66F8\u304D\u306A\u3069\u5C0F\u3055\u304F\u66F8\u304B\u308C\u3066\u3044\u308B\u91CD\u8981\u60C5\u5831
+\u305F\u3060\u3057FAQ\u3084\u6CE8\u610F\u4E8B\u9805\u3070\u304B\u308A\u306B\u504F\u3089\u305A\u3001\u300C\u30B3\u30A2\u30D0\u30EA\u30E5\u30FC\u300D\u300C\u30BF\u30FC\u30B2\u30C3\u30C8\u300D\u300C\u6A5F\u80FD\u7684/\u60C5\u7DD2\u7684\u30D9\u30CD\u30D5\u30A3\u30C3\u30C8\u300D\u306E\u89E3\u50CF\u5EA6\u3082\u5341\u5206\u306B\u9AD8\u3081\u3066\u304F\u3060\u3055\u3044\u3002
 \u51FA\u529B\u30D5\u30A9\u30FC\u30DE\u30C3\u30C8 (Markdown):
 # 1. \u5546\u6750\u306E\u6DF1\u5C64\u89E3\u5256 (Product Analysis)
 - **\u30B3\u30A2\u30D0\u30EA\u30E5\u30FC (\u4E00\u8A00\u3067\u8A00\u3046\u3068\u4F55\u3092\u5909\u3048\u308B\u5546\u54C1\u304B)**:
@@ -2307,6 +2311,52 @@ var lpAnalysisRoutes = new Hono2().post("/lp-analysis", async (c) => {
   return c.json({ ok: true, markdown });
 });
 
+// ../shared/lp-analysis.ts
+var EMPTY_STRUCTURED_CONTEXT = {
+  coreValue: "",
+  mainTarget: "",
+  functionalBenefits: [],
+  emotionalBenefits: [],
+  competitiveAdvantage: ""
+};
+
+// src/routes/projects.ts
+var DEMO_USER_ID = "demo-user";
+var DEMO_PROJECT_ID = "demo-project";
+var demoProject = {
+  id: DEMO_PROJECT_ID,
+  userId: DEMO_USER_ID,
+  name: "\u30C7\u30E2\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8",
+  lpUrl: "",
+  lpRawAnalysisMarkdown: "",
+  lpStructuredContext: { ...EMPTY_STRUCTURED_CONTEXT }
+};
+var projectRoutes = new Hono2().get("/projects/:projectId", (c) => {
+  return c.json({ ok: true, project: demoProject });
+}).put("/projects/:projectId/lp-context", async (c) => {
+  let body;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ ok: false, error: "Invalid JSON body" }, 400);
+  }
+  const { structured, markdown } = body;
+  if (!structured) {
+    return c.json({ ok: false, error: "structured context is required" }, 400);
+  }
+  demoProject = {
+    ...demoProject,
+    lpStructuredContext: structured,
+    lpRawAnalysisMarkdown: markdown ?? demoProject.lpRawAnalysisMarkdown
+  };
+  const res = {
+    ok: true,
+    lpStructuredContext: demoProject.lpStructuredContext,
+    lpRawAnalysisMarkdown: markdown
+  };
+  return c.json(res);
+});
+
 // src/index.ts
 var app = new Hono2();
 app.use(
@@ -2318,6 +2368,7 @@ app.use(
   })
 );
 app.route("/", lpAnalysisRoutes);
+app.route("/", projectRoutes);
 app.get("/", (c) => c.json({ name: "kachi-banner-pro-api", version: "0.0.1" }));
 var src_default = app;
 

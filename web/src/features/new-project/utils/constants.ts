@@ -1,3 +1,4 @@
+export { EMPTY_STRUCTURED_CONTEXT } from "@shared";
 import { type LPAnalysis } from "../types";
 
 export const DEFAULT_ANALYSIS: LPAnalysis = {

@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { lpAnalysisRoutes } from "./routes/lp-analysis/lp-analysis.js";
+import { projectRoutes } from "./routes/projects.js";
 import { ENV_OPENAI_API_KEY } from "./config.js";
 
 export interface Env {
@@ -19,7 +20,9 @@ app.use(
   })
 );
 
+// ルート登録
 app.route("/", lpAnalysisRoutes);
+app.route("/", projectRoutes);
 
 app.get("/", (c) => c.json({ name: "kachi-banner-pro-api", version: "0.0.1" }));
 

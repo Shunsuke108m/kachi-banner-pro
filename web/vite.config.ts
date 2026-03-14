@@ -14,6 +14,8 @@ export default defineConfig({
     alias: {
       // Alias @ to the src directory
       '@': path.resolve(__dirname, './src'),
+      // api/web 共通スキーマ（プロンプト変更時はここだけ直す）
+      '@shared': path.resolve(__dirname, '../shared'),
     },
   },
 

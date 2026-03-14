@@ -1,8 +1,9 @@
 import { useAtom, useSetAtom } from "jotai";
 import { Globe, Brain, CheckCircle2, Loader2, ChevronRight, AlertCircle } from "lucide-react";
-import { lpUrlAtom, analysisCompleteAtom, currentStepAtom, lpAnalysisMarkdownAtom } from "../stores";
+import { lpUrlAtom, analysisCompleteAtom, currentStepAtom, lpAnalysisMarkdownAtom, lpStructuredContextAtom } from "../stores";
 import { useAnalyzeLp } from "../api";
 import { DEMO_LP_URLS } from "../utils/constants";
+import { parseLpAnalysisMarkdown } from "../utils/lpAnalysisParser";
 
 const AnalyzingState = () => (
   <div className="bg-white rounded-2xl border border-violet-100 shadow-sm p-8 text-center">
@@ -27,6 +28,7 @@ export const Step1LpAnalysis = () => {
   const [analysisComplete, setAnalysisComplete] = useAtom(analysisCompleteAtom);
   const setCurrentStep = useSetAtom(currentStepAtom);
   const setLpAnalysisMarkdown = useSetAtom(lpAnalysisMarkdownAtom);
+  const setStructuredContext = useSetAtom(lpStructuredContextAtom);
   const { mutate: analyzeLp, isPending, isError, error } = useAnalyzeLp();
 
   const handleAnalyze = () => {
@@ -34,7 +36,9 @@ export const Step1LpAnalysis = () => {
     analyzeLp(lpUrl, {
       onSuccess: (data) => {
         setLpAnalysisMarkdown(data.markdown);
+        setStructuredContext(parseLpAnalysisMarkdown(data.markdown));
         setAnalysisComplete(true);
+        setCurrentStep(2); // 分析完了後、自動でターゲット確認画面へ
       },
     });
   };

@@ -1,14 +1,19 @@
 import { useAtomValue } from "jotai";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { ArrowLeft, CheckCircle2, RefreshCw, ShieldCheck } from "lucide-react";
 import { bannersAtom } from "./stores";
 import { AnalysisSummary } from "./components/AnalysisSummary";
 import { BannerCard } from "./components/BannerCard";
 import { PurchaseModal } from "./components/PurchaseModal";
 import { PreviewModal } from "./components/PreviewModal";
+import { LpContextPanel } from "./components/LpContextPanel";
+import { useProject } from "./api";
 
 export const ProjectDetail = () => {
   const navigate = useNavigate();
+  const params = useParams();
+  const projectId = params.id ?? "demo-project";
+  const { data: project } = useProject(projectId);
   const banners = useAtomValue(bannersAtom);
   const purchasedCount = banners.filter((b) => b.isPurchased).length;
 
@@ -26,8 +31,14 @@ export const ProjectDetail = () => {
             </button>
             <div className="h-4 w-px bg-gray-200" />
             <div>
-              <h1 className="text-slate-800" style={{ fontSize: "15px", fontWeight: 600 }}>スリムエース（ダイエットサプリ）</h1>
-              <p className="text-slate-400" style={{ fontSize: "11px" }}>生成日: 2026-03-01</p>
+              <h1 className="text-slate-800" style={{ fontSize: "15px", fontWeight: 600 }}>
+                {project?.name ?? "プロジェクト"}
+              </h1>
+              {project?.lpUrl && (
+                <p className="text-slate-400" style={{ fontSize: "11px" }}>
+                  LP: {project.lpUrl}
+                </p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -47,6 +58,7 @@ export const ProjectDetail = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-8">
+        <LpContextPanel />
         <AnalysisSummary />
 
         <div className="flex items-center justify-between mb-4">

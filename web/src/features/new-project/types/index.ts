@@ -12,3 +12,6 @@ export interface LPAnalysis {
   mainMessage: string;
   cta: string;
 }
+
+// api/web 共通。実体は shared にあり、プロンプト変更時は shared のみ修正する
+export type { LpStructuredContext } from "@shared";
