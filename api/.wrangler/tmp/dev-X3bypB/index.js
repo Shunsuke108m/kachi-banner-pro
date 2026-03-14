@@ -2411,6 +2411,13 @@ var projectRoutes = new Hono2().get("/projects", (c) => {
     lpRawAnalysisMarkdown: project.lpRawAnalysisMarkdown
   };
   return c.json(res);
+}).delete("/project/:projectId", (c) => {
+  const projectId = c.req.param("projectId");
+  if (!store.has(projectId)) {
+    return c.json({ ok: false, error: "Project not found" }, 404);
+  }
+  store.delete(projectId);
+  return c.json({ ok: true });
 });
 
 // src/index.ts
@@ -2419,7 +2426,7 @@ app.use(
   "/*",
   cors({
     origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
-    allowMethods: ["GET", "POST", "PUT", "PATCH", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type"]
   })
 );

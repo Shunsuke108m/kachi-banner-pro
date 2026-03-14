@@ -1,8 +1,7 @@
-import { type GeneratedBanner } from "../types";
+import { type GeneratedBanner, type GenerationRound } from "../types";
 
-export const MOCK_BANNERS: GeneratedBanner[] = [
+const MOCK_BANNERS_TEMPLATE: Omit<GeneratedBanner, "id">[] = [
   {
-    id: "b1",
     title: "パターン A：数字訴求型",
     appealType: "社会的証明 × 具体的数字",
     appealScore: 94,
@@ -19,7 +18,6 @@ export const MOCK_BANNERS: GeneratedBanner[] = [
     isPurchased: false,
   },
   {
-    id: "b2",
     title: "パターン B：感情訴求型",
     appealType: "ペイン×ゲイン共鳴型",
     appealScore: 89,
@@ -36,7 +34,6 @@ export const MOCK_BANNERS: GeneratedBanner[] = [
     isPurchased: false,
   },
   {
-    id: "b3",
     title: "パターン C：権威訴求型",
     appealType: "専門家推薦 × 希少性",
     appealScore: 86,
@@ -53,3 +50,21 @@ export const MOCK_BANNERS: GeneratedBanner[] = [
     isPurchased: false,
   },
 ];
+
+function withIds(banners: Omit<GeneratedBanner, "id">[], prefix: string): GeneratedBanner[] {
+  return banners.map((b, i) => ({ ...b, id: `${prefix}-b${i + 1}` }));
+}
+
+export const MOCK_BANNERS: GeneratedBanner[] = withIds(MOCK_BANNERS_TEMPLATE, "r0");
+
+/** 新規ラウンド用のモック3パターン（id は一意） */
+export function createMockBannersForRound(roundId: string): GeneratedBanner[] {
+  return withIds(MOCK_BANNERS_TEMPLATE, roundId);
+}
+
+/** 初期表示用の1ラウンド（参考バナーなし・モック3枚） */
+export const INITIAL_GENERATION_ROUND: GenerationRound = {
+  id: "r0",
+  generatedAt: new Date(Date.now() - 86400000).toISOString(), // 1日前
+  banners: withIds(MOCK_BANNERS_TEMPLATE, "r0"),
+};

@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAtomValue } from "jotai";
 import { useNavigate, useParams } from "react-router";
-import { ArrowLeft, CheckCircle2, RefreshCw, ShieldCheck, Edit3, Check } from "lucide-react";
-import { bannersAtom } from "./stores";
-import { AnalysisSummary } from "./components/AnalysisSummary";
-import { BannerCard } from "./components/BannerCard";
+import { ArrowLeft, Edit3, Check, ImagePlus, ShieldCheck, Trash2 } from "lucide-react";
+import { generationsAtom } from "./stores";
+import { GenerationRoundCard } from "./components/GenerationRoundCard";
 import { PurchaseModal } from "./components/PurchaseModal";
 import { PreviewModal } from "./components/PreviewModal";
 import { LpContextPanel } from "./components/LpContextPanel";
-import { useProject, useUpdateProjectName } from "./api";
+import { RefBannerUploadModal } from "./components/RefBannerUploadModal";
+import { DeleteProjectModal } from "./components/DeleteProjectModal";
+import { useProject, useUpdateProjectName, useDeleteProject } from "./api";
 
 export const ProjectDetail = () => {
   const navigate = useNavigate();
@@ -16,10 +17,26 @@ export const ProjectDetail = () => {
   const projectId = params.id ?? "demo-project";
   const { data: project, isLoading, isError } = useProject(projectId);
   const updateName = useUpdateProjectName(projectId);
+  const deleteProject = useDeleteProject(projectId);
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
-  const banners = useAtomValue(bannersAtom);
-  const purchasedCount = banners.filter((b) => b.isPurchased).length;
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const generations = useAtomValue(generationsAtom);
+  const historyEndRef = useRef<HTMLDivElement>(null);
+  const prevGenerationsLengthRef = useRef(generations.length);
+
+  useEffect(() => {
+    if (generations.length > prevGenerationsLengthRef.current) {
+      historyEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    prevGenerationsLengthRef.current = generations.length;
+  }, [generations.length]);
+
+  const totalPurchased = generations.reduce(
+    (acc, r) => acc + r.banners.filter((b) => b.isPurchased).length,
+    0
+  );
 
   const startEditName = () => {
     setNameDraft(project?.name ?? "");
@@ -63,8 +80,8 @@ export const ProjectDetail = () => {
   }
 
   return (
-    <div className="min-h-full bg-gray-50">
-      <div className="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10">
+    <div className="min-h-full bg-gray-50 flex flex-col">
+      <header className="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-20 shrink-0 min-h-16">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -121,49 +138,79 @@ export const ProjectDetail = () => {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg">
-              <CheckCircle2 size={13} />
-              <span style={{ fontSize: "12px", fontWeight: 500 }}>3パターン生成完了</span>
-            </div>
-            <button
-              onClick={() => navigate("/new")}
-              className="flex items-center gap-1.5 border border-violet-200 text-violet-600 hover:bg-violet-50 rounded-lg px-3 py-1.5 transition-colors"
-              style={{ fontSize: "13px" }}
-            >
-              <RefreshCw size={13} />再生成
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setDeleteModalOpen(true)}
+            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            aria-label="プロジェクトを削除"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
+      </header>
+
+      <div className="sticky top-16 z-10 shrink-0 bg-gray-50 max-h-[60vh] overflow-y-auto">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <LpContextPanel />
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <LpContextPanel />
-        <AnalysisSummary />
-
+      <div className="flex-1 max-w-6xl w-full mx-auto px-6 py-6 pb-24">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-slate-900" style={{ fontSize: "17px", fontWeight: 700 }}>
-            生成されたバナー <span className="text-violet-600">3パターン</span>
+            生成結果
           </h2>
-          <p className="text-slate-500" style={{ fontSize: "13px" }}>
-            {purchasedCount > 0
-              ? <span className="text-emerald-600 font-medium">{purchasedCount}本購入済み</span>
-              : "気に入ったバナーを ¥500 で購入"}
-          </p>
+          {totalPurchased > 0 && (
+            <p className="text-slate-500" style={{ fontSize: "13px" }}>
+              <span className="text-emerald-600 font-medium">{totalPurchased}本購入済み</span>
+            </p>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {banners.map((banner) => <BannerCard key={banner.id} banner={banner} />)}
+        <div className="space-y-8">
+          {generations.map((round) => (
+            <GenerationRoundCard key={round.id} round={round} />
+          ))}
+          <div ref={historyEndRef} aria-hidden />
         </div>
 
-        <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-3">
+        <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-3 mb-6">
           <ShieldCheck size={16} className="text-slate-400 shrink-0" />
           <p className="text-slate-400" style={{ fontSize: "12px", lineHeight: 1.5 }}>
             購入後は透かし(ウォーターマーク)なしの高解像度バナー画像をダウンロードできます。生成AIによる画像のため、実際の配信前にクリエイティブポリシーをご確認ください。
           </p>
         </div>
+
       </div>
 
+      <footer className="fixed bottom-0 left-60 right-0 z-10 bg-white border-t border-gray-100 px-6 py-4">
+        <div className="max-w-6xl mx-auto flex justify-center">
+          <button
+            type="button"
+            onClick={() => setUploadModalOpen(true)}
+            className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white rounded-xl px-6 py-3 font-medium transition-colors"
+            style={{ fontSize: "14px" }}
+          >
+            <ImagePlus size={18} />参考バナーをアップロードして生成
+          </button>
+        </div>
+      </footer>
+
+      <RefBannerUploadModal isOpen={uploadModalOpen} onClose={() => setUploadModalOpen(false)} />
+      <DeleteProjectModal
+        isOpen={deleteModalOpen}
+        projectName={project?.name ?? "プロジェクト"}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={() => {
+          deleteProject.mutate(undefined, {
+            onSuccess: () => {
+              setDeleteModalOpen(false);
+              navigate("/");
+            },
+          });
+        }}
+        isDeleting={deleteProject.isPending}
+      />
       <PurchaseModal />
       <PreviewModal />
     </div>

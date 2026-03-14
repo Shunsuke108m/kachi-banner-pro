@@ -125,4 +125,13 @@ export const projectRoutes = new Hono<{ Bindings: Env }>()
       lpRawAnalysisMarkdown: project.lpRawAnalysisMarkdown,
     };
     return c.json(res);
+  })
+  // プロジェクト削除
+  .delete("/project/:projectId", (c) => {
+    const projectId = c.req.param("projectId");
+    if (!store.has(projectId)) {
+      return c.json({ ok: false, error: "Project not found" }, 404);
+    }
+    store.delete(projectId);
+    return c.json({ ok: true });
   });

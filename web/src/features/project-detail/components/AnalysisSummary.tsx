@@ -7,18 +7,27 @@ const SUMMARY_ITEMS = [
   { label: "CVR向上", value: "社会的証明・リスク解消", icon: Zap, color: "text-purple-500" },
 ] as const;
 
-export const AnalysisSummary = () => (
-  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
+interface AnalysisSummaryProps {
+  /** 参考バナー分析と生成結果セクション内に埋め込む場合は true（外枠・見出しを省略） */
+  embedded?: boolean;
+}
+
+export const AnalysisSummary = ({ embedded }: AnalysisSummaryProps) => (
+  <div className={embedded ? "" : "bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6"}>
     <div className="flex items-start gap-4">
       <div className="w-9 h-9 bg-violet-100 rounded-xl flex items-center justify-center shrink-0">
         <BarChart2 size={17} className="text-violet-600" />
       </div>
       <div className="flex-1">
-        <h2 className="text-slate-800" style={{ fontSize: "15px", fontWeight: 600 }}>参考バナー分析サマリー</h2>
-        <p className="text-slate-500 mt-1" style={{ fontSize: "13px" }}>
-          アップロードされた参考バナーから以下の訴求力要素を抽出し、3パターンに横展開しました。
-        </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+        {!embedded && (
+          <>
+            <h2 className="text-slate-800" style={{ fontSize: "15px", fontWeight: 600 }}>参考バナー分析サマリー</h2>
+            <p className="text-slate-500 mt-1" style={{ fontSize: "13px" }}>
+              アップロードされた参考バナーから以下の訴求力要素を抽出し、3パターンに横展開しました。
+            </p>
+          </>
+        )}
+        <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${embedded ? "" : "mt-4"}`}>
           {SUMMARY_ITEMS.map((item) => (
             <div key={item.label} className="bg-gray-50 rounded-xl p-3">
               <div className="flex items-center gap-1.5 mb-1.5">

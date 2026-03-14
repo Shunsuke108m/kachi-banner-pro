@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAtom } from "jotai";
-import { Edit3, Save, Loader2, AlertCircle, ChevronDown, ChevronRight } from "lucide-react";
+import { Edit3, Save, Loader2, AlertCircle, ChevronDown, ChevronRight, ChevronUp } from "lucide-react";
 import { type LpStructuredContext, useProject, useUpdateLpContext } from "../api";
 import { useParams } from "react-router";
 import { lpContextOpenAtom } from "../stores";
@@ -269,6 +269,16 @@ export const LpContextPanel = () => {
               placeholder="例: 1行1項目で得られる安心感・優越感を入力"
               onSave={handleSaveList}
             />
+          </div>
+          <div className="pt-4 mt-2 border-t border-gray-100">
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="w-full flex items-center justify-center gap-1.5 py-2.5 text-slate-500 hover:text-slate-700 hover:bg-gray-50 rounded-lg transition-colors"
+              style={{ fontSize: "13px" }}
+            >
+              <ChevronUp size={16} />閉じる
+            </button>
           </div>
         </div>
       )}

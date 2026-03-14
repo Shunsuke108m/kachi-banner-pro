@@ -78,7 +78,7 @@ export const useProject = (projectId?: string) => {
 };
 
 async function updateProjectName(projectId: string, name: string): Promise<Project> {
-  const res = await fetch(`${getApiBaseUrl()}/projects/${projectId}`, {
+  const res = await fetch(`${getApiBaseUrl()}/project/${projectId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name: name.trim() || "無題のプロジェクト" }),
@@ -132,6 +132,29 @@ export const useUpdateLpContext = (projectId?: string) => {
       queryClient.setQueryData<Project | undefined>(["project", id], (prev) =>
         prev ? { ...prev, lpStructuredContext } : prev
       );
+    },
+  });
+};
+
+// ------- プロジェクト削除 -------
+
+async function deleteProject(projectId: string): Promise<void> {
+  const res = await fetch(`${getApiBaseUrl()}/project/${projectId}`, {
+    method: "DELETE",
+  });
+  const data = (await res.json()) as { ok: boolean; error?: string };
+  if (!data.ok) {
+    throw new Error(data.error ?? "プロジェクトの削除に失敗しました");
+  }
+}
+
+export const useDeleteProject = (projectId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => deleteProject(projectId),
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["project", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["projectList"] });
     },
   });
 };

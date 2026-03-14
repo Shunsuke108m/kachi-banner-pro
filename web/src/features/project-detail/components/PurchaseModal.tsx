@@ -1,6 +1,6 @@
 import { useAtom, useSetAtom } from "jotai";
 import { X, CheckCircle2, Download, CreditCard, ShieldCheck, Sparkles } from "lucide-react";
-import { purchaseTargetAtom, bannersAtom, purchaseCompleteAtom } from "../stores";
+import { purchaseTargetAtom, generationsAtom, purchaseCompleteAtom, markBannerPurchased } from "../stores";
 import { usePurchaseBanner } from "../api";
 
 const PURCHASE_BENEFITS = [
@@ -33,7 +33,7 @@ const SuccessView = ({ onClose }: { onClose: () => void }) => (
 export const PurchaseModal = () => {
   const [purchaseTarget, setPurchaseTarget] = useAtom(purchaseTargetAtom);
   const [purchaseComplete, setPurchaseComplete] = useAtom(purchaseCompleteAtom);
-  const setBanners = useSetAtom(bannersAtom);
+  const setGenerations = useSetAtom(generationsAtom);
   const { mutate: purchase, isPending } = usePurchaseBanner();
 
   if (!purchaseTarget) return null;
@@ -47,7 +47,7 @@ export const PurchaseModal = () => {
     purchase(purchaseTarget.id, {
       onSuccess: () => {
         setPurchaseComplete(true);
-        setBanners((prev) => prev.map((b) => b.id === purchaseTarget.id ? { ...b, isPurchased: true } : b));
+        markBannerPurchased(setGenerations, purchaseTarget.id);
       },
     });
   };
